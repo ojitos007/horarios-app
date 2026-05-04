@@ -1,4 +1,4 @@
-#!/mnt/c/horarios-universidad/backend/venv/bin/python3
+#!/home/ubuntu/horarios-app/backend/venv/bin/python3.14
 # -*- coding: utf-8 -*-
 import re
 import sys
