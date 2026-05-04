@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dashboard Horarios</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color:white;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px;
+    background:#020617;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+
+.title{
+    font-size:24px;
+    font-weight:bold;
+}
+
+.role{
+    background:#22c55e;
+    padding:5px 10px;
+    border-radius:10px;
+    color:black;
+    font-weight:bold;
+}
+
+/* BOTONES */
+.actions{
+    text-align:center;
+    margin-top:20px;
+}
+
+button{
+    padding:10px 15px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:white;
+    margin:5px;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover{
+    transform:scale(1.05);
+    background:#16a34a;
+}
+
+/* CARD */
+.card{
+    margin:20px auto;
+    width:95%;
+    background:#1e293b;
+    padding:20px;
+    border-radius:20px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
+}
+
+/* TABLA */
+table{
+    width:100%;
+    border-collapse: collapse;
+}
+
+th{
+    background:#020617;
+    padding:12px;
+}
+
+td{
+    background:#334155;
+    border:1px solid #1e293b;
+    height:80px;
+    transition:0.2s;
+}
+
+td:hover{
+    background:#475569;
+}
+
+/* BLOQUES */
+.bloque{
+    background:#22c55e;
+    color:black;
+    padding:6px;
+    border-radius:8px;
+    cursor:grab;
+    transition:0.2s;
+    font-size:13px;
+}
+
+.bloque:hover{
+    transform:scale(1.05);
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* RESPONSIVE */
+@media(max-width:800px){
+    th, td{
+        font-size:10px;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="title">Sistema de Horarios</div>
+    <div class="role" id="rolTexto"></div>
+</div>
+
+<div class="actions">
+    <button onclick="guardarCambios()">Guardar cambios</button>
+    <button onclick="logout()">Cerrar sesión</button>
+</div>
+
+<div class="card">
+
+<table>
+<thead>
+<tr>
+<th>Hora</th>
+<th>Lunes</th>
+<th>Martes</th>
+<th>Miercoles</th>
+<th>Jueves</th>
+<th>Viernes</th>
+</tr>
+</thead>
+
+<tbody id="tabla"></tbody>
+</table>
+
+</div>
+
+<script>
+
+const horas = ["7-8","8-9","9-10","10-11","11-12","12-1","1-2","2-3"];
+const dias = ["Lunes","Martes","Miercoles","Jueves","Viernes"];
+
+const nombre = localStorage.getItem("nombre");
+const rol = localStorage.getItem("rol");
+
+document.getElementById("rolTexto").innerText = rol?.toUpperCase();
+
+let horarioGlobal = [];
+
+/* TABLA */
+function crearTabla(){
+    let html = "";
+
+    horas.forEach(hora=>{
+        html += `<tr><td>${hora}</td>`;
+
+        dias.forEach(dia=>{
+            html += `<td data-dia="${dia}" data-hora="${hora}"
+                        ondragover="permitirDrop(event)"
+                        ondrop="soltar(event)">
+                    </td>`;
+        });
+
+        html += "</tr>";
+    });
+
+    document.getElementById("tabla").innerHTML = html;
+}
+
+/* CARGAR */
+async function cargarHorario(){
+
+    let url = rol === "admin"
+        ? "http://127.0.0.1:8000/todos_horarios"
+        : `http://127.0.0.1:8000/horario_maestro?nombre=${nombre}`;
+
+    const res = await fetch(url);
+    horarioGlobal = await res.json();
+
+    pintarHorario();
+}
+
+/* PINTAR */
+function pintarHorario(){
+
+    document.querySelectorAll("td[data-dia]").forEach(td=>td.innerHTML="");
+
+    horarioGlobal.forEach((c, index)=>{
+
+        const celda = document.querySelector(
+            `[data-dia="${c.dia}"][data-hora="${c.hora}"]`
+        );
+
+        if(celda){
+            celda.innerHTML = `
+                <div class="bloque"
+                    draggable="${rol === "admin"}"
+                    ondragstart="arrastrar(event, ${index})">
+                    <b>${c.materia}</b><br>
+                    ${c.grupo}<br>
+                    ${c.maestro}
+                </div>
+            `;
+        }
+    });
+}
+
+/* DRAG */
+function arrastrar(ev, index){
+    ev.dataTransfer.setData("index", index);
+}
+
+/* DROP */
+function permitirDrop(ev){
+    ev.preventDefault();
+}
+
+/* VALIDACIÓN */
+function validarMovimiento(indexOrigen, nuevoDia, nuevaHora){
+
+    const clase = horarioGlobal[indexOrigen];
+
+    const ocupado = horarioGlobal.some((c,i)=>
+        i!=indexOrigen && c.dia===nuevoDia && c.hora===nuevaHora
+    );
+
+    if(ocupado) return "Ya hay una clase ahí";
+
+    const materiaDia = horarioGlobal.some((c,i)=>
+        i!=indexOrigen && c.maestro===clase.maestro &&
+        c.dia===nuevoDia && c.materia===clase.materia
+    );
+
+    if(materiaDia) return "Materia repetida ese día";
+
+    return "ok";
+}
+
+/* SOLTAR */
+function soltar(ev){
+    ev.preventDefault();
+
+    if(rol !== "admin"){
+        alert("Solo admin puede mover");
+        return;
+    }
+
+    const index = ev.dataTransfer.getData("index");
+
+    const celda = ev.currentTarget;
+
+    const dia = celda.getAttribute("data-dia");
+    const hora = celda.getAttribute("data-hora");
+
+    const val = validarMovimiento(index, dia, hora);
+
+    if(val !== "ok"){
+        alert(val);
+        return;
+    }
+
+    horarioGlobal[index].dia = dia;
+    horarioGlobal[index].hora = hora;
+
+    pintarHorario();
+}
+
+/* GUARDAR */
+async function guardarCambios(){
+
+    if(rol !== "admin"){
+        alert("Solo admin guarda");
+        return;
+    }
+
+    await fetch("http://127.0.0.1:8000/guardar_horario",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body: JSON.stringify(horarioGlobal)
+    });
+
+    alert("Guardado correctamente");
+}
+
+/* LOGOUT */
+function logout(){
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+/* INIT */
+crearTabla();
+cargarHorario();
+
+</script>
+
+</body>
+</html>

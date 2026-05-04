@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Panel Admin</title>
+
+<style>
+
+body{
+    margin:0;
+    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    color:white;
+}
+
+/* HEADER */
+.header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    padding:20px;
+    background:#020617;
+    box-shadow:0 4px 20px rgba(0,0,0,0.5);
+}
+
+.title{
+    font-size:22px;
+    font-weight:bold;
+}
+
+button{
+    padding:10px;
+    border:none;
+    border-radius:10px;
+    background:#22c55e;
+    color:white;
+    cursor:pointer;
+    font-weight:bold;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#16a34a;
+    transform:scale(1.05);
+}
+
+/* CONTENEDOR */
+.container{
+    display:flex;
+    flex-wrap:wrap;
+    justify-content:center;
+    gap:20px;
+    padding:20px;
+}
+
+/* CARDS */
+.card{
+    background:#1e293b;
+    padding:20px;
+    border-radius:20px;
+    width:300px;
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
+    animation:fadeIn 0.5s ease;
+}
+
+@keyframes fadeIn{
+    from{opacity:0; transform:translateY(20px);}
+    to{opacity:1; transform:translateY(0);}
+}
+
+/* INPUTS */
+input{
+    width:100%;
+    padding:10px;
+    margin:8px 0;
+    border:none;
+    border-radius:10px;
+    background:#334155;
+    color:white;
+    outline:none;
+}
+
+input:focus{
+    background:#475569;
+}
+
+/* RESULTADOS */
+#resultado{
+    width:90%;
+    margin:20px auto;
+}
+
+.horario-card{
+    background:#334155;
+    padding:15px;
+    margin:10px;
+    border-radius:12px;
+    box-shadow:0 5px 15px rgba(0,0,0,0.3);
+    transition:0.2s;
+}
+
+.horario-card:hover{
+    transform:scale(1.02);
+}
+
+/* MENSAJE */
+.mensaje{
+    text-align:center;
+    margin-top:10px;
+    color:#22c55e;
+}
+
+.error{
+    color:#f87171;
+}
+
+</style>
+</head>
+
+<body>
+
+<div class="header">
+    <div class="title">Panel Administrador</div>
+    <button onclick="logout()">Cerrar sesión</button>
+</div>
+
+<div class="container">
+
+<!-- CREAR MAESTRO -->
+<div class="card">
+
+<h3>Crear Maestro</h3>
+
+<form id="formMaestro">
+
+<input id="usuario" placeholder="Usuario" required>
+<input id="password" placeholder="Password" required>
+<input id="nombre" placeholder="Nombre" required>
+
+<input id="tipo" placeholder="Tipo (sindicalizado/contrato/horas)" required>
+
+<input id="materia" placeholder="Materia" required>
+<input id="grupo" placeholder="Grupo (4N,4M,4O)" required>
+<input id="horas" type="number" placeholder="Horas" required>
+
+<button type="submit">Crear Maestro</button>
+
+</form>
+
+<div id="msgCrear" class="mensaje"></div>
+
+</div>
+
+<!-- ACCIONES -->
+<div class="card">
+
+<h3>Acciones</h3>
+
+<button onclick="generarHorarios()">Generar horarios</button>
+<br><br>
+<button onclick="verHorarios()">Ver horarios</button>
+
+<div id="msgAcciones" class="mensaje"></div>
+
+</div>
+
+</div>
+
+<!-- RESULTADOS -->
+<div id="resultado"></div>
+
+<script>
+
+// LOGOUT
+function logout(){
+    localStorage.clear();
+    window.location.href = "login.html";
+}
+
+// CREAR MAESTRO
+document.getElementById("formMaestro").onsubmit = async function(e){
+    e.preventDefault();
+
+    const msg = document.getElementById("msgCrear");
+    msg.innerText = "";
+
+    const data = {
+        usuario: document.getElementById("usuario").value,
+        password: document.getElementById("password").value,
+        nombre: document.getElementById("nombre").value,
+        tipo: document.getElementById("tipo").value,
+        materia: document.getElementById("materia").value,
+        grupo: document.getElementById("grupo").value,
+        horas: parseInt(document.getElementById("horas").value)
+    };
+
+    try{
+        const res = await fetch("http://127.0.0.1:8000/crear_maestro",{
+            method:"POST",
+            headers:{"Content-Type":"application/json"},
+            body: JSON.stringify(data)
+        });
+
+        const result = await res.json();
+
+        msg.innerText = result.status || "Maestro creado correctamente";
+
+    }catch{
+        msg.innerText = "Error al crear maestro";
+        msg.classList.add("error");
+    }
+};
+
+// GENERAR HORARIOS
+async function generarHorarios(){
+
+    const msg = document.getElementById("msgAcciones");
+
+    const res = await fetch("http://127.0.0.1:8000/generar_horarios");
+    const data = await res.json();
+
+    msg.innerText = data.status;
+}
+
+// VER HORARIOS
+async function verHorarios(){
+
+    const res = await fetch("http://127.0.0.1:8000/todos_horarios");
+    const data = await res.json();
+
+    let html = "<h2 style='text-align:center;'>Horarios Generales</h2>";
+
+    if(data.length === 0){
+        html += "<p style='text-align:center;'>No hay horarios generados</p>";
+    }
+
+    data.forEach(h=>{
+        html += `
+            <div class="horario-card">
+                <b>${h.dia}</b> | ${h.hora}<br>
+                Grupo: ${h.grupo}<br>
+                Materia: ${h.materia}<br>
+                Maestro: ${h.maestro}
+            </div>
+        `;
+    });
+
+    document.getElementById("resultado").innerHTML = html;
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Registro</title>
+
+<style>
+body{
+    font-family: Arial;
+    background:#f4f6f9;
+}
+
+.container{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    height:100vh;
+}
+
+.card{
+    background:white;
+    padding:30px;
+    border-radius:10px;
+    box-shadow:0px 4px 10px rgba(0,0,0,0.1);
+    text-align:center;
+}
+
+input, select{
+    display:block;
+    width:250px;
+    margin:10px auto;
+    padding:8px;
+}
+
+button{
+    width:200px;
+    padding:10px;
+    background:#003d79;
+    color:white;
+    border:none;
+    border-radius:5px;
+}
+
+button:hover{
+    background:#0050a0;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+<div class="card">
+
+<h2>Registro</h2>
+
+<form id="formRegistro">
+
+<input id="nombre" placeholder="Nombre">
+<input id="correo" placeholder="Correo">
+<input id="password" placeholder="Contraseña">
+
+<select id="tipo">
+<option value="sindicalizado">Sindicalizado</option>
+<option value="contrato">Contrato</option>
+<option value="horas">Horas</option>
+</select>
+
+<select id="carrera">
+<option>LIDTS</option>
+<option>Sistemas Digitales</option>
+</select>
+
+<input id="semestre" type="number" placeholder="Semestre (1-9)">
+<input id="matricula" placeholder="Matrícula">
+
+<button type="submit">Registrar</button>
+
+</form>
+
+<br>
+<button onclick="volver()">⬅ Volver</button>
+
+</div>
+</div>
+
+<script>
+
+document.getElementById("formRegistro").onsubmit = async function(e){
+    e.preventDefault();
+
+    const data = {
+        nombre: document.getElementById("nombre").value,
+        correo: document.getElementById("correo").value,
+        password: document.getElementById("password").value,
+        tipo: document.getElementById("tipo").value,
+        carrera: document.getElementById("carrera").value,
+        semestre: parseInt(document.getElementById("semestre").value),
+        matricula: document.getElementById("matricula").value
+    };
+
+    const response = await fetch("http://127.0.0.1:8000/registro",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify(data)
+    });
+
+    const result = await response.json();
+
+    alert(result.mensaje);
+
+    window.location.href="login.html";
+}
+
+function volver(){
+    window.location.href="index.html";
+}
+
+</script>
+
+</body>
+</html>
