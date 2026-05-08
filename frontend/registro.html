@@ -1,122 +1,484 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
+
 <head>
-<title>Registro</title>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Registro Maestro</title>
 
 <style>
-body{
-    font-family: Arial;
-    background:#f4f6f9;
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
-.container{
+body{
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
+    background:linear-gradient(135deg,#0f172a,#1e293b);
+    min-height:100vh;
     display:flex;
     justify-content:center;
     align-items:center;
-    height:100vh;
-}
-
-.card{
-    background:white;
-    padding:30px;
-    border-radius:10px;
-    box-shadow:0px 4px 10px rgba(0,0,0,0.1);
-    text-align:center;
-}
-
-input, select{
-    display:block;
-    width:250px;
-    margin:10px auto;
-    padding:8px;
-}
-
-button{
-    width:200px;
-    padding:10px;
-    background:#003d79;
+    overflow:hidden;
     color:white;
+    position:relative;
+}
+
+/* FONDO */
+.background{
+    position:absolute;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    z-index:0;
+}
+
+.circle{
+    position:absolute;
+    border-radius:50%;
+    background:rgba(34,197,94,0.12);
+    animation:float 8s infinite ease-in-out;
+}
+
+.circle:nth-child(1){
+    width:240px;
+    height:240px;
+    top:-60px;
+    left:-60px;
+}
+
+.circle:nth-child(2){
+    width:180px;
+    height:180px;
+    bottom:-50px;
+    right:-50px;
+    animation-delay:2s;
+}
+
+.circle:nth-child(3){
+    width:120px;
+    height:120px;
+    top:55%;
+    left:70%;
+    animation-delay:4s;
+}
+
+@keyframes float{
+
+    0%{
+        transform:translateY(0px);
+    }
+
+    50%{
+        transform:translateY(-20px);
+    }
+
+    100%{
+        transform:translateY(0px);
+    }
+
+}
+
+/* CARD */
+.card{
+    position:relative;
+    z-index:1;
+    background:rgba(30,41,59,0.96);
+    width:420px;
+    padding:40px;
+    border-radius:28px;
+    box-shadow:0 20px 45px rgba(0,0,0,0.45);
+    backdrop-filter:blur(10px);
+    animation:fadeIn 0.7s ease;
+}
+
+@keyframes fadeIn{
+
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
+
+}
+
+/* TITULOS */
+.logo{
+    font-size:52px;
+    text-align:center;
+    margin-bottom:10px;
+}
+
+h2{
+    text-align:center;
+    font-size:30px;
+    margin-bottom:10px;
+}
+
+.subtitle{
+    text-align:center;
+    color:#cbd5e1;
+    font-size:14px;
+    margin-bottom:25px;
+}
+
+/* INPUTS */
+.input-group{
+    margin-bottom:16px;
+}
+
+label{
+    display:block;
+    margin-bottom:6px;
+    font-size:14px;
+    color:#cbd5e1;
+}
+
+input{
+    width:100%;
+    padding:14px;
     border:none;
-    border-radius:5px;
+    border-radius:14px;
+    background:#334155;
+    color:white;
+    outline:none;
+    font-size:15px;
+    transition:0.3s;
+}
+
+input:focus{
+    background:#475569;
+    transform:scale(1.01);
+}
+
+/* PASSWORD */
+.password-container{
+    position:relative;
+}
+
+.toggle{
+    position:absolute;
+    right:15px;
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:#22c55e;
+    font-size:13px;
+    font-weight:bold;
+}
+
+/* BOTÓN */
+button{
+    width:100%;
+    padding:15px;
+    border:none;
+    border-radius:14px;
+    background:#22c55e;
+    color:white;
+    font-size:16px;
+    font-weight:bold;
+    cursor:pointer;
+    transition:0.3s;
+    margin-top:10px;
+    box-shadow:0 6px 18px rgba(34,197,94,0.35);
 }
 
 button:hover{
-    background:#0050a0;
+    background:#16a34a;
+    transform:translateY(-3px) scale(1.02);
 }
+
+/* MENSAJE */
+.message{
+    margin-top:18px;
+    text-align:center;
+    font-size:14px;
+    font-weight:bold;
+    min-height:20px;
+}
+
+.error{
+    color:#f87171;
+}
+
+.success{
+    color:#22c55e;
+}
+
+/* FOOTER */
+.footer{
+    margin-top:20px;
+    text-align:center;
+    color:#94a3b8;
+    font-size:12px;
+}
+
+/* RESPONSIVE */
+@media(max-width:500px){
+
+    .card{
+        width:95%;
+        padding:30px;
+    }
+
+    h2{
+        font-size:26px;
+    }
+
+}
+
 </style>
 
 </head>
 
 <body>
 
-<div class="container">
-<div class="card">
+<!-- FONDO -->
+<div class="background">
 
-<h2>Registro</h2>
-
-<form id="formRegistro">
-
-<input id="nombre" placeholder="Nombre">
-<input id="correo" placeholder="Correo">
-<input id="password" placeholder="Contraseña">
-
-<select id="tipo">
-<option value="sindicalizado">Sindicalizado</option>
-<option value="contrato">Contrato</option>
-<option value="horas">Horas</option>
-</select>
-
-<select id="carrera">
-<option>LIDTS</option>
-<option>Sistemas Digitales</option>
-</select>
-
-<input id="semestre" type="number" placeholder="Semestre (1-9)">
-<input id="matricula" placeholder="Matrícula">
-
-<button type="submit">Registrar</button>
-
-</form>
-
-<br>
-<button onclick="volver()">⬅ Volver</button>
+    <div class="circle"></div>
+    <div class="circle"></div>
+    <div class="circle"></div>
 
 </div>
+
+<!-- FORMULARIO -->
+<div class="card">
+
+    <div class="logo">📝</div>
+
+    <h2>Registrar Maestro</h2>
+
+    <div class="subtitle">
+        Registro de docentes al sistema académico
+    </div>
+
+    <form id="formRegistro">
+
+        <div class="input-group">
+
+            <label>Usuario</label>
+
+            <input 
+                id="usuario"
+                type="text"
+                placeholder="Ingresa usuario"
+                required
+            >
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Contraseña</label>
+
+            <div class="password-container">
+
+                <input 
+                    id="password"
+                    type="password"
+                    placeholder="Ingresa contraseña"
+                    required
+                >
+
+                <span class="toggle" onclick="togglePassword()">
+                    VER
+                </span>
+
+            </div>
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Nombre completo</label>
+
+            <input 
+                id="nombre"
+                type="text"
+                placeholder="Nombre del maestro"
+                required
+            >
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Tipo</label>
+
+            <input 
+                id="tipo"
+                type="text"
+                placeholder="sindicalizado / contrato / horas"
+                required
+            >
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Materia</label>
+
+            <input 
+                id="materia"
+                type="text"
+                placeholder="Ejemplo: Matemáticas"
+                required
+            >
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Grupo</label>
+
+            <input 
+                id="grupo"
+                type="text"
+                placeholder="Ejemplo: 4N"
+                required
+            >
+
+        </div>
+
+        <div class="input-group">
+
+            <label>Horas</label>
+
+            <input 
+                id="horas"
+                type="number"
+                placeholder="Cantidad de horas"
+                required
+            >
+
+        </div>
+
+        <button type="submit">
+            Registrar Maestro
+        </button>
+
+    </form>
+
+    <div id="mensaje" class="message"></div>
+
+    <div class="footer">
+        FastAPI • MySQL • AWS EC2
+    </div>
+
 </div>
 
 <script>
 
+/* MOSTRAR PASSWORD */
+function togglePassword(){
+
+    const pass = document.getElementById("password");
+
+    if(pass.type === "password"){
+
+        pass.type = "text";
+
+    }else{
+
+        pass.type = "password";
+
+    }
+
+}
+
+/* REGISTRO */
 document.getElementById("formRegistro").onsubmit = async function(e){
+
     e.preventDefault();
 
+    const mensaje = document.getElementById("mensaje");
+
+    mensaje.innerText = "";
+    mensaje.className = "message";
+
     const data = {
-        nombre: document.getElementById("nombre").value,
-        correo: document.getElementById("correo").value,
+
+        usuario: document.getElementById("usuario").value,
+
         password: document.getElementById("password").value,
+
+        nombre: document.getElementById("nombre").value,
+
         tipo: document.getElementById("tipo").value,
-        carrera: document.getElementById("carrera").value,
-        semestre: parseInt(document.getElementById("semestre").value),
-        matricula: document.getElementById("matricula").value
+
+        materia: document.getElementById("materia").value,
+
+        grupo: document.getElementById("grupo").value,
+
+        horas: parseInt(
+            document.getElementById("horas").value
+        )
+
     };
 
-    const response = await fetch("http://127.0.0.1:8000/registro",{
-        method:"POST",
-        headers:{"Content-Type":"application/json"},
-        body:JSON.stringify(data)
-    });
+    try{
 
-    const result = await response.json();
+        const response = await fetch(
+            "http://18.220.231.121:8000/crear_maestro",
+        {
 
-    alert(result.mensaje);
+            method:"POST",
 
-    window.location.href="login.html";
-}
+            headers:{
+                "Content-Type":"application/json"
+            },
 
-function volver(){
-    window.location.href="index.html";
-}
+            body:JSON.stringify(data)
+
+        });
+
+        if(!response.ok){
+
+            throw new Error("Error del servidor");
+
+        }
+
+        const result = await response.json();
+
+        console.log("REGISTRO:", result);
+
+        mensaje.innerText = 
+            "Maestro registrado correctamente";
+
+        mensaje.classList.add("success");
+
+        document.getElementById("formRegistro").reset();
+
+        setTimeout(() => {
+
+            window.location.href = "login.html";
+
+        }, 1500);
+
+    }catch(err){
+
+        console.error("ERROR:", err);
+
+        mensaje.innerText =
+            "No se pudo conectar con el servidor";
+
+        mensaje.classList.add("error");
+
+    }
+
+};
 
 </script>
 
 </body>
+
 </html>

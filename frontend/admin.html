@@ -28,7 +28,7 @@ body{
 }
 
 button{
-    padding:10px;
+    padding:10px 15px;
     border:none;
     border-radius:10px;
     background:#22c55e;
@@ -57,14 +57,20 @@ button:hover{
     background:#1e293b;
     padding:20px;
     border-radius:20px;
-    width:300px;
+    width:320px;
     box-shadow:0 10px 40px rgba(0,0,0,0.4);
     animation:fadeIn 0.5s ease;
 }
 
 @keyframes fadeIn{
-    from{opacity:0; transform:translateY(20px);}
-    to{opacity:1; transform:translateY(0);}
+    from{
+        opacity:0;
+        transform:translateY(20px);
+    }
+    to{
+        opacity:1;
+        transform:translateY(0);
+    }
 }
 
 /* INPUTS */
@@ -77,6 +83,7 @@ input{
     background:#334155;
     color:white;
     outline:none;
+    box-sizing:border-box;
 }
 
 input:focus{
@@ -102,11 +109,12 @@ input:focus{
     transform:scale(1.02);
 }
 
-/* MENSAJE */
+/* MENSAJES */
 .mensaje{
     text-align:center;
     margin-top:10px;
     color:#22c55e;
+    font-weight:bold;
 }
 
 .error{
@@ -120,48 +128,63 @@ input:focus{
 
 <div class="header">
     <div class="title">Panel Administrador</div>
-    <button onclick="logout()">Cerrar sesión</button>
+
+    <button onclick="logout()">
+        Cerrar sesión
+    </button>
 </div>
 
 <div class="container">
 
-<!-- CREAR MAESTRO -->
-<div class="card">
+    <!-- CREAR MAESTRO -->
+    <div class="card">
 
-<h3>Crear Maestro</h3>
+        <h3>Crear Maestro</h3>
 
-<form id="formMaestro">
+        <form id="formMaestro">
 
-<input id="usuario" placeholder="Usuario" required>
-<input id="password" placeholder="Password" required>
-<input id="nombre" placeholder="Nombre" required>
+            <input id="usuario" placeholder="Usuario" required>
 
-<input id="tipo" placeholder="Tipo (sindicalizado/contrato/horas)" required>
+            <input id="password" type="password" placeholder="Password" required>
 
-<input id="materia" placeholder="Materia" required>
-<input id="grupo" placeholder="Grupo (4N,4M,4O)" required>
-<input id="horas" type="number" placeholder="Horas" required>
+            <input id="nombre" placeholder="Nombre" required>
 
-<button type="submit">Crear Maestro</button>
+            <input id="tipo" placeholder="Tipo (sindicalizado/contrato/horas)" required>
 
-</form>
+            <input id="materia" placeholder="Materia" required>
 
-<div id="msgCrear" class="mensaje"></div>
+            <input id="grupo" placeholder="Grupo (4N,4M,4O)" required>
 
-</div>
+            <input id="horas" type="number" placeholder="Horas" required>
 
-<!-- ACCIONES -->
-<div class="card">
+            <button type="submit">
+                Crear Maestro
+            </button>
 
-<h3>Acciones</h3>
+        </form>
 
-<button onclick="generarHorarios()">Generar horarios</button>
-<br><br>
-<button onclick="verHorarios()">Ver horarios</button>
+        <div id="msgCrear" class="mensaje"></div>
 
-<div id="msgAcciones" class="mensaje"></div>
+    </div>
 
-</div>
+    <!-- ACCIONES -->
+    <div class="card">
+
+        <h3>Acciones</h3>
+
+        <button onclick="generarHorarios()">
+            Generar horarios
+        </button>
+
+        <br><br>
+
+        <button onclick="verHorarios()">
+            Ver horarios
+        </button>
+
+        <div id="msgAcciones" class="mensaje"></div>
+
+    </div>
 
 </div>
 
@@ -170,18 +193,21 @@ input:focus{
 
 <script>
 
-// LOGOUT
+// 🔒 LOGOUT
 function logout(){
     localStorage.clear();
     window.location.href = "login.html";
 }
 
-// CREAR MAESTRO
+// 👨‍🏫 CREAR MAESTRO
 document.getElementById("formMaestro").onsubmit = async function(e){
+
     e.preventDefault();
 
     const msg = document.getElementById("msgCrear");
+
     msg.innerText = "";
+    msg.classList.remove("error");
 
     const data = {
         usuario: document.getElementById("usuario").value,
@@ -194,57 +220,140 @@ document.getElementById("formMaestro").onsubmit = async function(e){
     };
 
     try{
-        const res = await fetch("http://127.0.0.1:8000/crear_maestro",{
+
+        const res = await fetch("http://18.220.231.121:8000/crear_maestro",{
             method:"POST",
-            headers:{"Content-Type":"application/json"},
+            headers:{
+                "Content-Type":"application/json"
+            },
             body: JSON.stringify(data)
         });
+
+        if(!res.ok){
+            throw new Error();
+        }
 
         const result = await res.json();
 
         msg.innerText = result.status || "Maestro creado correctamente";
 
-    }catch{
+        document.getElementById("formMaestro").reset();
+
+    }catch(error){
+
         msg.innerText = "Error al crear maestro";
         msg.classList.add("error");
+
     }
+
 };
 
-// GENERAR HORARIOS
+// ⚡ GENERAR HORARIOS
 async function generarHorarios(){
 
     const msg = document.getElementById("msgAcciones");
 
-    const res = await fetch("http://127.0.0.1:8000/generar_horarios");
-    const data = await res.json();
+    msg.innerText = "";
+    msg.classList.remove("error");
 
-    msg.innerText = data.status;
-}
+    try{
 
-// VER HORARIOS
-async function verHorarios(){
+        const res = await fetch("http://18.220.231.121:8000/generar_horarios");
 
-    const res = await fetch("http://127.0.0.1:8000/todos_horarios");
-    const data = await res.json();
+        if(!res.ok){
+            throw new Error();
+        }
 
-    let html = "<h2 style='text-align:center;'>Horarios Generales</h2>";
+        const data = await res.json();
 
-    if(data.length === 0){
-        html += "<p style='text-align:center;'>No hay horarios generados</p>";
+        msg.innerText = data.status || "Horarios generados correctamente";
+
+        // Mostrar automáticamente después de generar
+        verHorarios();
+
+    }catch(error){
+
+        msg.innerText = "Error al generar horarios";
+        msg.classList.add("error");
+
     }
 
-    data.forEach(h=>{
+}
+
+// 👀 VER HORARIOS
+async function verHorarios(){
+
+    const msg = document.getElementById("msgAcciones");
+
+    msg.innerText = "";
+    msg.classList.remove("error");
+
+    try{
+
+        const res = await fetch("http://18.220.231.121:8000/todos_horarios");
+
+        if(!res.ok){
+            throw new Error();
+        }
+
+        const data = await res.json();
+
+        mostrarHorarios(data);
+
+    }catch(error){
+
+        msg.innerText = "Error al cargar horarios";
+        msg.classList.add("error");
+
+    }
+
+}
+
+// 📅 MOSTRAR HORARIOS
+function mostrarHorarios(data){
+
+    let html = `
+        <h2 style="text-align:center;">
+            Horarios Generales
+        </h2>
+    `;
+
+    if(data.length === 0){
+
+        html += `
+            <p style="text-align:center;">
+                No hay horarios generados
+            </p>
+        `;
+
+    }
+
+    data.forEach(h => {
+
         html += `
             <div class="horario-card">
-                <b>${h.dia}</b> | ${h.hora}<br>
-                Grupo: ${h.grupo}<br>
-                Materia: ${h.materia}<br>
-                Maestro: ${h.maestro}
+
+                <b>${h.dia}</b> | ${h.hora}
+
+                <br><br>
+
+                <b>Grupo:</b> ${h.grupo}
+
+                <br>
+
+                <b>Materia:</b> ${h.materia}
+
+                <br>
+
+                <b>Maestro:</b> ${h.maestro}
+
             </div>
         `;
+
     });
 
     document.getElementById("resultado").innerHTML = html;
+
 }
 
 </script>
