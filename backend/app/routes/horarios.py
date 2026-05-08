@@ -6,11 +6,21 @@ router = APIRouter()
 
 # 📅 Datos base
 dias = ["Lunes", "Martes", "Miercoles", "Jueves", "Viernes"]
-horas = ["1-2", "3-4", "5-6", "7-8", "9-10", "11-12"]
+
+horas = [
+    "7-8",
+    "8-9",
+    "9-10",
+    "10-11",
+    "11-12",
+    "12-1",
+    "1-2"
+]
 
 # 🔥 GENERAR HORARIOS
 @router.get("/generar_horarios")
 def generar_horarios():
+
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
@@ -18,35 +28,46 @@ def generar_horarios():
     cursor.execute("DELETE FROM horarios")
 
     # 👨‍🏫 Obtener maestros
-    cursor.execute("SELECT * FROM usuarios WHERE rol='maestro'")
+    cursor.execute("""
+        SELECT *
+        FROM usuarios
+        WHERE rol='maestro'
+    """)
+
     maestros = cursor.fetchall()
 
+    horarios_generados = []
+
+    usados_global = set()
+
     for maestro in maestros:
-        horas_asignadas = int(maestro["horas"]) if maestro["horas"] else 0
 
-        usados = set()
+        horas_asignadas = int(maestro["horas"]) if maestro["horas"] else 1
 
-        for _ in range(horas_asignadas):
-            intentos = 0
+        contador = 0
 
-            while True:
-                dia = random.choice(dias)
-                hora = random.choice(horas)
+        while contador < horas_asignadas:
 
-                clave = f"{dia}-{hora}"
+            dia = random.choice(dias)
+            hora = random.choice(horas)
 
-                # 🔒 Evitar repetir mismo horario
-                if clave not in usados:
-                    usados.add(clave)
-                    break
+            # 🔒 Evitar conflictos
+            clave = f"{dia}-{hora}-{maestro['grupo']}"
 
-                intentos += 1
-                if intentos > 20:
-                    break
+            if clave in usados_global:
+                continue
+
+            usados_global.add(clave)
 
             cursor.execute("""
-                INSERT INTO horarios (dia, hora, grupo, materia, maestro)
-                VALUES (%s, %s, %s, %s, %s)
+                INSERT INTO horarios (
+                    dia,
+                    hora,
+                    grupo,
+                    materia,
+                    maestro
+                )
+                VALUES (%s,%s,%s,%s,%s)
             """, (
                 dia,
                 hora,
@@ -55,38 +76,60 @@ def generar_horarios():
                 maestro["nombre"]
             ))
 
+            horarios_generados.append({
+                "dia": dia,
+                "hora": hora,
+                "grupo": maestro["grupo"],
+                "materia": maestro["materia"],
+                "maestro": maestro["nombre"]
+            })
+
+            contador += 1
+
     conn.commit()
+
+    cursor.close()
     conn.close()
 
-    return {"status": "horarios generados correctamente"}
+    return horarios_generados
 
 
 # 🔥 OBTENER HORARIO POR MAESTRO
 @router.get("/horario_maestro")
 def horario_maestro(nombre: str):
+
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT * FROM horarios WHERE maestro = %s
+        SELECT *
+        FROM horarios
+        WHERE maestro = %s
     """, (nombre,))
 
     datos = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return datos
 
 
-# 🔥 NUEVO: VER TODOS LOS HORARIOS (ADMIN)
+# 🔥 VER TODOS LOS HORARIOS
 @router.get("/todos_horarios")
 def todos_horarios():
+
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    cursor.execute("SELECT * FROM horarios")
+    cursor.execute("""
+        SELECT *
+        FROM horarios
+    """)
+
     datos = cursor.fetchall()
 
+    cursor.close()
     conn.close()
 
     return datos
@@ -95,6 +138,7 @@ def todos_horarios():
 # 🔥 GUARDAR CAMBIOS (drag & drop)
 @router.post("/guardar_horario")
 def guardar_horario(data: list):
+
     conn = get_connection()
     cursor = conn.cursor()
 
@@ -103,9 +147,16 @@ def guardar_horario(data: list):
 
     # 🔁 Insertar nuevo horario
     for item in data:
+
         cursor.execute("""
-            INSERT INTO horarios (dia, hora, grupo, materia, maestro)
-            VALUES (%s, %s, %s, %s, %s)
+            INSERT INTO horarios (
+                dia,
+                hora,
+                grupo,
+                materia,
+                maestro
+            )
+            VALUES (%s,%s,%s,%s,%s)
         """, (
             item["dia"],
             item["hora"],
@@ -115,6 +166,10 @@ def guardar_horario(data: list):
         ))
 
     conn.commit()
+
+    cursor.close()
     conn.close()
 
-    return {"status": "horario guardado"}
+    return {
+        "status": "horario guardado"
+    }

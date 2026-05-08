@@ -7,7 +7,7 @@
 
 body{
     margin:0;
-    font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-family:'Segoe UI',Tahoma,Geneva,Verdana,sans-serif;
     background:linear-gradient(135deg,#0f172a,#1e293b);
     color:white;
 }
@@ -29,9 +29,9 @@ body{
 
 .role{
     background:#22c55e;
+    color:black;
     padding:6px 12px;
     border-radius:10px;
-    color:black;
     font-weight:bold;
 }
 
@@ -54,19 +54,19 @@ button{
 }
 
 button:hover{
-    transform:scale(1.05);
     background:#16a34a;
+    transform:scale(1.05);
 }
 
-/* CARD */
+/* CONTENEDOR */
 .card{
-    margin:20px auto;
     width:95%;
+    margin:20px auto;
     background:#1e293b;
     padding:20px;
     border-radius:20px;
-    box-shadow:0 10px 40px rgba(0,0,0,0.4);
     overflow-x:auto;
+    box-shadow:0 10px 40px rgba(0,0,0,0.4);
 }
 
 /* TABLA */
@@ -84,29 +84,29 @@ th{
 td{
     background:#334155;
     border:1px solid #1e293b;
-    height:90px;
-    min-width:120px;
-    text-align:center;
+    height:100px;
+    min-width:130px;
     vertical-align:top;
-    transition:0.2s;
+    text-align:center;
     padding:5px;
+    transition:0.2s;
 }
 
 td:hover{
     background:#475569;
 }
 
-/* BLOQUES */
+/* BLOQUE */
 .bloque{
     background:#22c55e;
     color:black;
     padding:8px;
     border-radius:10px;
-    cursor:grab;
-    transition:0.2s;
     font-size:13px;
     font-weight:bold;
-    margin:2px;
+    margin:3px;
+    cursor:grab;
+    transition:0.2s;
 }
 
 .bloque:hover{
@@ -114,7 +114,7 @@ td:hover{
     box-shadow:0 5px 15px rgba(0,0,0,0.3);
 }
 
-/* MENSAJE */
+/* MENSAJES */
 .mensaje{
     text-align:center;
     margin-top:15px;
@@ -129,7 +129,7 @@ td:hover{
 /* RESPONSIVE */
 @media(max-width:800px){
 
-    th, td{
+    th,td{
         font-size:10px;
     }
 
@@ -162,6 +162,10 @@ td:hover{
         Guardar cambios
     </button>
 
+    <button onclick="recargarHorario()">
+        Recargar horario
+    </button>
+
     <button onclick="logout()">
         Cerrar sesión
     </button>
@@ -175,7 +179,6 @@ td:hover{
 <table>
 
 <thead>
-
 <tr>
     <th>Hora</th>
     <th>Lunes</th>
@@ -184,7 +187,6 @@ td:hover{
     <th>Jueves</th>
     <th>Viernes</th>
 </tr>
-
 </thead>
 
 <tbody id="tabla"></tbody>
@@ -194,6 +196,8 @@ td:hover{
 </div>
 
 <script>
+
+const API = "http://18.220.231.121:8000";
 
 const horas = [
     "7-8",
@@ -234,8 +238,8 @@ function crearTabla(){
         dias.forEach(dia => {
 
             html += `
-                <td 
-                    data-dia="${dia}" 
+                <td
+                    data-dia="${dia}"
                     data-hora="${hora}"
                     ondragover="permitirDrop(event)"
                     ondrop="soltar(event)">
@@ -257,18 +261,20 @@ async function cargarHorario(){
 
     try{
 
-        const res = await fetch("http://18.220.231.121:8000/todos_horarios");
+        const response = await fetch(`${API}/todos_horarios`);
 
-        if(!res.ok){
-            throw new Error();
+        if(!response.ok){
+            throw new Error("No se pudo cargar");
         }
 
-        const data = await res.json();
+        const data = await response.json();
+
+        console.log("HORARIOS:", data);
 
         if(rol === "maestro"){
 
             horarioGlobal = data.filter(
-                c => c.maestro === nombre
+                h => h.maestro === nombre
             );
 
         }else{
@@ -281,41 +287,42 @@ async function cargarHorario(){
 
     }catch(error){
 
-        mostrarMensaje("Error al cargar horarios", true);
+        console.error(error);
+
+        mostrarMensaje(
+            "Error al cargar horarios",
+            true
+        );
 
     }
 
 }
 
-/* PINTAR */
+/* PINTAR HORARIO */
 function pintarHorario(){
 
     document.querySelectorAll("td[data-dia]").forEach(td => {
         td.innerHTML = "";
     });
 
-    horarioGlobal.forEach((c,index) => {
+    horarioGlobal.forEach((clase,index) => {
 
         const celda = document.querySelector(
-            `[data-dia="${c.dia}"][data-hora="${c.hora}"]`
+            `[data-dia="${clase.dia}"][data-hora="${clase.hora}"]`
         );
 
         if(celda){
 
-            celda.innerHTML = `
+            celda.innerHTML += `
                 <div class="bloque"
                     draggable="${rol === "admin"}"
                     ondragstart="arrastrar(event, ${index})">
 
-                    <b>${c.materia}</b>
-
+                    ${clase.materia}
                     <br>
-
-                    ${c.grupo}
-
+                    ${clase.grupo}
                     <br>
-
-                    ${c.maestro}
+                    ${clase.maestro}
 
                 </div>
             `;
@@ -341,29 +348,26 @@ function permitirDrop(ev){
 }
 
 /* VALIDAR */
-function validarMovimiento(indexOrigen, nuevoDia, nuevaHora){
+function validarMovimiento(index,nuevoDia,nuevaHora){
 
-    const clase = horarioGlobal[indexOrigen];
+    const clase = horarioGlobal[index];
 
-    // Choque de horario
-    const ocupado = horarioGlobal.some((c,i) =>
+    const ocupado = horarioGlobal.some((c,i)=>
 
-        i != indexOrigen &&
+        i != index &&
         c.dia === nuevoDia &&
-        c.hora === nuevaHora
+        c.hora === nuevaHora &&
+        c.grupo === clase.grupo
 
     );
 
     if(ocupado){
-
-        return "Ya existe una clase en ese horario";
-
+        return "Ese grupo ya tiene clase ahí";
     }
 
-    // Mismo maestro duplicado
-    const maestroOcupado = horarioGlobal.some((c,i) =>
+    const maestroOcupado = horarioGlobal.some((c,i)=>
 
-        i != indexOrigen &&
+        i != index &&
         c.maestro === clase.maestro &&
         c.dia === nuevoDia &&
         c.hora === nuevaHora
@@ -371,9 +375,7 @@ function validarMovimiento(indexOrigen, nuevoDia, nuevaHora){
     );
 
     if(maestroOcupado){
-
         return "El maestro ya tiene clase ahí";
-
     }
 
     return "ok";
@@ -400,7 +402,11 @@ function soltar(ev){
 
     const hora = celda.getAttribute("data-hora");
 
-    const validacion = validarMovimiento(index, dia, hora);
+    const validacion = validarMovimiento(
+        index,
+        dia,
+        hora
+    );
 
     if(validacion !== "ok"){
 
@@ -416,12 +422,12 @@ function soltar(ev){
 
 }
 
-/* GUARDAR CAMBIOS */
+/* GUARDAR */
 async function guardarCambios(){
 
     try{
 
-        const res = await fetch("http://18.220.231.121:8000/guardar_horario",{
+        const response = await fetch(`${API}/guardar_horario`,{
             method:"POST",
             headers:{
                 "Content-Type":"application/json"
@@ -429,37 +435,49 @@ async function guardarCambios(){
             body: JSON.stringify(horarioGlobal)
         });
 
-        if(!res.ok){
+        if(!response.ok){
             throw new Error();
         }
 
-        const data = await res.json();
+        const data = await response.json();
 
-        mostrarMensaje(data.status || "Cambios guardados");
+        mostrarMensaje(
+            data.status || "Horario guardado"
+        );
 
     }catch(error){
 
-        mostrarMensaje("Error al guardar cambios", true);
+        console.error(error);
+
+        mostrarMensaje(
+            "Error al guardar",
+            true
+        );
 
     }
 
 }
 
+/* RECARGAR */
+async function recargarHorario(){
+
+    await cargarHorario();
+
+    mostrarMensaje("Horario actualizado");
+
+}
+
 /* MENSAJES */
-function mostrarMensaje(texto, error=false){
+function mostrarMensaje(texto,error=false){
 
     const msg = document.getElementById("mensaje");
 
     msg.innerText = texto;
 
     if(error){
-
         msg.classList.add("error");
-
     }else{
-
         msg.classList.remove("error");
-
     }
 
 }
